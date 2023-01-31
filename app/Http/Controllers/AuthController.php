@@ -8,12 +8,13 @@ use App\Models\User;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Log;
 use App\Models\Invites;
+use App\Jobs\SendForgetPasswordOtpMailJob;
 
 class AuthController extends Controller{
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login','register']]);
+        $this->middleware('auth:api', ['except' => ['login','register','sendOTPForForgetPassword']]);
     }
 
     public function login(Request $request)
@@ -91,6 +92,23 @@ class AuthController extends Controller{
                 'type' => 'bearer',
             ]
         ]);
+    }
+
+    public function sendOTPForForgetPassword(Request $request)
+    {
+        // Check User Exist
+
+        $Email = $request->get('email');
+        if (User::where('email', $Email)->get()->count() > 0) {
+            SendForgetPasswordOtpMailJob::dispatch(User::where('email', $Email)->first());
+            // Send the response
+        } else {
+            return response()->json([
+                'status' => false,
+                'email_doesnt_exist' => true,
+                'message' => 'E-Mail doesn\'t exist',
+            ]);
+        }
     }
 
 }

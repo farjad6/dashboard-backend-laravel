@@ -6,12 +6,15 @@ use Illuminate\Http\Request;
 use App\Models\Invites;
 use App\Http\Resources\InvitesResource;
 use App\Http\Requests\InviteStoreRequest;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TestEmail;
+
 use Illuminate\Support\Facades\Log;
 
 class InvitesController extends Controller
 {
     public function index(Request $request){
-        try{ 
+        try{
             $invites = Invites::get();
             return response()->json([ 'status' => 1 ,'data' => InvitesResource::collection($invites)], 200);
 
@@ -21,14 +24,15 @@ class InvitesController extends Controller
                 "error" => $e->getMessage(),
             ]);
             return response()->json([ 'status' => 0 ,'data' => []], 200);
-        } 
+        }
     }
 
     public function store(InviteStoreRequest $request){
-        try{ 
+        try{
             $data = $request->only(['email', 'role']);
             $data['token'] = bin2hex(random_bytes(20));
             $invite = Invites::create($data);
+            Mail::to("checkemail392@gmail.com")->send(new TestEmail(InvitesResource::make($invite)));
             return response()->json([ 'status' => 1 ,'data' => InvitesResource::make($invite)], 200);
         }catch(\Exception $e){
             customExceptionError([
@@ -36,12 +40,12 @@ class InvitesController extends Controller
                 "error" => $e->getMessage(),
             ]);
             return response()->json([ 'status' => 0 ,'data' => []], 200);
-        } 
+        }
     }
 
     public function destroy($inviteId)
     {
-        try{ 
+        try{
             Invites::destroy($inviteId);
             return response()->json(['status' => 1, 'message' => 'ok'], 200);
         }catch(\Exception $e){
@@ -50,6 +54,6 @@ class InvitesController extends Controller
                 "error" => $e->getMessage(),
             ]);
             return response()->json([ 'status' => 0 ,'data' => []], 200);
-        } 
+        }
     }
 }

@@ -11,6 +11,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('logout', 'logout');
     Route::post('refresh', 'refresh');
     Route::get('me', 'me');
+    Route::post('send-otp-for-forget-password', 'sendOTPForForgetPassword');
 });
 
 Route::group([
@@ -30,4 +31,4 @@ Route::group([
     // Route::get('todo/{id}', 'show');
     // Route::put('todo/{id}', 'update');
     // Route::delete('todo/{id}', 'destroy');
-// }); 
+// });
