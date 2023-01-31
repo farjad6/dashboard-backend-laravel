@@ -9,12 +9,14 @@ use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Log;
 use App\Models\Invites;
 use App\Jobs\SendForgetPasswordOtpMailJob;
+use App\Models\ForgetPasswordOTP;
+
 
 class AuthController extends Controller{
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login','register','sendOTPForForgetPassword']]);
+        $this->middleware('auth:api', ['except' => ['login','register','sendOTPForForgetPassword','verifySendOTPForForgetPassword','changeOTPForForgetPassword']]);
     }
 
     public function login(Request $request)
@@ -94,14 +96,18 @@ class AuthController extends Controller{
         ]);
     }
 
+
     public function sendOTPForForgetPassword(Request $request)
     {
         // Check User Exist
-
         $Email = $request->get('email');
         if (User::where('email', $Email)->get()->count() > 0) {
             SendForgetPasswordOtpMailJob::dispatch(User::where('email', $Email)->first());
             // Send the response
+            return response()->json([
+                'status' => true,
+                'message' => 'E-Mail sent successfully.'
+            ]);
         } else {
             return response()->json([
                 'status' => false,
@@ -111,4 +117,50 @@ class AuthController extends Controller{
         }
     }
 
+    public function verifySendOTPForForgetPassword(Request $request)
+    {
+        $Email = $request->get('email');
+        $OTP = $request->get('otp');
+
+        $check = ForgetPasswordOTP::where('email', $Email)->where('otp', $OTP)->first();
+        // Check User Exist
+        if ($check) {
+            return response()->json([
+                'status' => true,
+                'message' => 'OTP Veirified'
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'email_doesnt_exist' => true,
+                'message' => 'Wrong OTP',
+            ]);
+        }
+    }
+
+    public function changeOTPForForgetPassword(Request $request) {
+        $Email = $request->get('email');
+        $OTP = $request->get('otp');
+        $Password = $request->get('password');
+
+        $check = ForgetPasswordOTP::where('email', $Email)->where('otp', $OTP)->first();
+
+        if($check) {
+            $check->delete();
+            $User = User::where('email', $Email)->first();
+            $User->password = Hash::make($Password);
+            $User->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Password changed successfully.'
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong. Try again later.'
+            ], 200);
+        }
+
+    }
 }

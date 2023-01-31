@@ -12,6 +12,9 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('refresh', 'refresh');
     Route::get('me', 'me');
     Route::post('send-otp-for-forget-password', 'sendOTPForForgetPassword');
+    Route::post('verify-send-otp-for-forget-password', 'verifySendOTPForForgetPassword');
+    Route::post('change-otp-for-forget-password', 'changeOTPForForgetPassword');
+
 });
 
 Route::group([
